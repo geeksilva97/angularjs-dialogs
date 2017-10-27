@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html ng-app="myModal">
+<head>
+	<title>Angular JS</title>
+	<meta charset="utf-8">
+
+	 <link rel='stylesheet prefetch' href='https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css'>
+
+	 <!-- <link rel="stylesheet" type="text/css" href="vendor/bootstrap.min.css"> -->
+     <link rel="stylesheet" href="css/style.css">
+
+</head>
+<body ng-controller="modalCtrl">
+
+	<button ng-click="launch('error')">Open Dialog</button>
+	<button ng-click="launch('custom')">Open Custom Modal</button>
+	<p>{{ name }}</p>
+
+	  <!-- <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script> -->
+	<script src="vendor/angular.min.js"></script>
+	<script src="vendor/ui-bootstrap-tpls-0.6.0.js"></script>
+	<script src="vendor/dialogs.min.js"></script>
+    <script type="text/javascript">
+    	angular.module('myModal', ['ui.bootstrap', 'dialogs'])
+
+    	.controller('modalCtrl', function($scope, $rootScope, $timeout, $dialogs){
+    		$scope.name = 'Seu nome';
+    		$scope.launch = wich => {
+    			let dlg = null;
+    			switch(wich){
+    				case 'error':
+    					dlg = $dialogs.error('Testando');
+    				break;
+
+    				case 'custom':
+    					dlg = $dialogs.create('/dialogs/whatsyourname.html', 'formModalCtrl', {name:'Edy Silva'}, {
+    						key: false,
+    						back: 'static'
+    					});
+    					dlg.result.then(
+    						name => {
+    							$scope.name = name;
+    						},
+    						data => {
+    							console.log(data);
+    							$scope.name = 'Você não informou nome nenhum!';
+    						},
+    					);
+    				break;
+    			}
+    		};
+
+    	})
+
+    	.controller('formModalCtrl', function($scope, $modalInstance, data){
+    		console.log(data);
+    		$scope.title = 'Olá mundo';
+    		$scope.user = {name:''};
+			$scope.cancel = function(){
+				$modalInstance.dismiss('canceled');  
+			}; // end cancel
+
+			$scope.save = function(){
+				$modalInstance.close($scope.user);
+			}; // end save
+
+			$scope.hitEnter = function(evt){
+			if(angular.equals(evt.keyCode,13) && !(angular.equals($scope.name,null) || angular.equals($scope.name,''))){
+					$scope.save();
+					console.log('save');
+				}
+			}; // end hitEnter
+    	})
+    	.run(['$templateCache', function($templateCache){
+    		$templateCache.put('/dialogs/whatsyourname.html',`
+    			<div class="modal">
+    				<div class="modal-dialog">
+    					<div class="modal-content">
+    						<div class="modal-header">
+    						<h4 class="modal-title"><span class="glyphicon glyphicon-star"></span> User\'s Name</h4>
+    						</div>
+    						<div class="modal-body">
+	    						<ng-form name="nameDialog" novalidate role="form">
+	    							<div class="form-group input-group-lg" ng-class="{true: \'has-error\'}[nameDialog.username.$dirty && nameDialog.username.$invalid]">
+	    								<label class="control-label" for="username">Name:</label>
+	    								<input type="text" class="form-control" name="username" id="username" ng-model="user.name" ng-keyup="hitEnter($event)" required>
+	    									<span class="help-block">Enter your full name, first &amp; last.</span>
+	    							</div>
+	    						</ng-form>
+    						</div>
+    						<div class="modal-footer">
+    							<button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
+    							<button type="button" class="btn btn-primary" ng-click="save()" ng-disabled="(nameDialog.$dirty && nameDialog.$invalid) || nameDialog.$pristine">Save</button>
+    						</div>
+    					</div>
+    				</div>
+    			</div>`);
+    	}]);
+    </script>
+</body>
+</html>
